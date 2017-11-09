@@ -2,6 +2,7 @@
 <link rel='import' href='../../bower_components/paper-button/paper-button.html'>
 
 <link rel='import' href='../components/ha-card.html'>
+<link rel='import' href='../components/ha-markdown.html'>
 
 <dom-module id='ha-persistent_notification-card'>
   <template>
@@ -9,11 +10,24 @@
       :host {
         @apply(--paper-font-body1);
       }
-      .content {
-        padding: 0 16px 16px;
+      ha-markdown {
+        display: block;
+        padding: 0 16px;
         -ms-user-select: initial;
         -webkit-user-select: initial;
         -moz-user-select: initial;
+      }
+      ha-markdown p:first-child {
+        margin-top: 0;
+      }
+      ha-markdown p:last-child {
+        margin-bottom: 0;
+      }
+      ha-markdown a {
+        color: var(--primary-color);
+      }
+      ha-markdown img {
+        max-width: 100%;
       }
       paper-button {
         margin: 8px;
@@ -22,7 +36,7 @@
     </style>
 
     <ha-card header='[[computeTitle(stateObj)]]'>
-      <div id='pnContent' class='content'></div>
+      <ha-markdown content='[[stateObj.attributes.message]]'></ha-markdown>
       <paper-button on-tap='dismissTap'>DISMISS</paper-button>
     </ha-card>
   </template>
@@ -35,17 +49,7 @@ class HaPersistentNotificationCard extends Polymer.Element {
     return {
       hass: Object,
       stateObj: Object,
-      scriptLoaded: {
-        type: Boolean,
-        value: false,
-      },
     };
-  }
-
-  static get observers() {
-    return [
-      'computeContent(stateObj, scriptLoaded)',
-    ];
   }
 
   computeTitle(stateObj) {
@@ -53,40 +57,8 @@ class HaPersistentNotificationCard extends Polymer.Element {
             window.hassUtil.computeStateName(stateObj));
   }
 
-  loadScript() {
-    var success = function () {
-      this.scriptLoaded = true;
-    }.bind(this);
-
-    var error = function () {
-      /* eslint-disable no-console */
-      console.error('Micromarkdown was not loaded.');
-      /* eslint-enable no-console */
-    };
-
-    this.importHref(
-      '/static/micromarkdown-js.html',
-      success, error
-    );
-  }
-
-  computeContent(stateObj, scriptLoaded) {
-    var el = '';
-    var message = '';
-    if (scriptLoaded) {
-      el = this.$.pnContent;
-      message = window.micromarkdown.parse(stateObj.attributes.message);
-      el.innerHTML = message;
-    }
-  }
-
-  ready() {
-    this.loadScript();
-  }
-
   dismissTap(ev) {
     ev.preventDefault();
-
     this.hass.callApi('DELETE', 'states/' + this.stateObj.entity_id);
   }
 }

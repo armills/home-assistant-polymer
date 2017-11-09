@@ -3,8 +3,7 @@ Generate a caching service worker for HA
 
 Will be called as part of build_frontend.
 
-Expects home-assistant-polymer repo as submodule of HA repo.
-Creates a caching service worker based on the CURRENT content of HA repo.
+Creates a caching service worker based on the built content of the repo in hass_frontend.
 Output service worker to build/service_worker.js
 
 TODO:
@@ -26,13 +25,7 @@ const DEV = !!JSON.parse(process.env.BUILD_DEV || 'true');
 var rootDir = 'hass_frontend';
 var panelDir = path.resolve(rootDir, 'panels');
 
-var dynamicUrlToDependencies = {
-  '/': [
-    rootDir + '/frontend.html',
-    rootDir + '/core.js',
-    rootDir + '/compatibility.js',
-  ],
-};
+var dynamicUrlToDependencies = {};
 
 var staticFingerprinted = [
   'frontend.html',
@@ -79,7 +72,8 @@ gulp.task('gen-service-worker', () => {
 
     var options = {
       navigateFallback: '/',
-      navigateFallbackWhitelist: [/^((?!(static|api|local|service_worker.js|manifest.json)).)*$/],
+      navigateFallbackWhitelist:
+          [/^(?:(?!(?:static|api|local|service_worker.js|manifest.json)).)*$/],
       dynamicUrlToDependencies: dynamicUrlToDependencies,
       staticFileGlobs: [
         rootDir + '/icons/favicon.ico',
@@ -91,10 +85,28 @@ gulp.task('gen-service-worker', () => {
         rootDir + '/fonts/roboto/Roboto-Bold.ttf',
         rootDir + '/images/card_media_player_bg.png',
       ],
-      runtimeCaching: [{
-        urlPattern: /\/static\/translations\//,
-        handler: 'cacheFirst',
-      }],
+      // Rules are proceeded in order and negative per-domain rules are not supported.
+      runtimeCaching: [
+        { // Cache static content (including translations) on first access.
+          urlPattern: '/static/*',
+          handler: 'cacheFirst',
+        },
+        { // Get api (and home-assistant-polymer in dev mode) from network.
+          urlPattern: '/(home-assistant-polymer|api)/*',
+          handler: 'networkOnly',
+        },
+        { // Get manifest and service worker from network.
+          urlPattern: '/(service_worker.js|manifest.json)',
+          handler: 'networkOnly',
+        },
+        { // For rest of the files (on Home Assistant domain only) try both cache and network.
+          // This includes the root "/" or "/states" response and user files from "/local".
+          // First access might bring stale data from cache, but a single refresh will bring updated
+          // file.
+          urlPattern: '*',
+          handler: 'fastest',
+        }
+      ],
       stripPrefix: 'hass_frontend',
       replacePrefix: 'static',
       verbose: true,

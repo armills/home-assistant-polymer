@@ -1,7 +1,8 @@
-<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../../../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../../src/components/buttons/ha-call-service-button.html">
+<link rel="import" href="../../../src/components/buttons/ha-call-api-button.html">
 <link rel="import" href="../../../src/components/ha-service-description.html">
 
 <link rel="import" href="../ha-config-section.html">
@@ -161,6 +162,10 @@
             service='test_network'
             hidden$='[[!showDescription]]'
           ></ha-service-description>
+          <ha-call-api-button
+            hass='[[hass]]'
+            path="zwave/saveconfig"
+          >Save Config</ha-call-api-button>
 
         </div>
       </paper-card>
@@ -169,27 +174,31 @@
 </dom-module>
 <script>
 
-Polymer({
-  is: 'zwave-network',
+class ZwaveNetwork extends Polymer.Element {
+  static get is() { return 'zwave-network'; }
 
-  properties: {
-    hass: {
-      type: Object,
-    },
+  static get properties() {
+    return {
+      hass: {
+        type: Object,
+      },
 
-    isWide: {
-      type: Boolean,
-      value: false,
-    },
+      isWide: {
+        type: Boolean,
+        value: false,
+      },
 
-    showDescription: {
-      type: Boolean,
-      value: false,
-    },
-  },
+      showDescription: {
+        type: Boolean,
+        value: false,
+      },
+    };
+  }
 
-  helpTap: function () {
+  helpTap() {
     this.showDescription = !this.showDescription;
   }
-});
+}
+
+customElements.define(ZwaveNetwork.is, ZwaveNetwork);
 </script>
