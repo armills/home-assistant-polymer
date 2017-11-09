@@ -4,9 +4,9 @@
     "states": "Overview",
     "map": "Map",
     "logbook": "Logbook",
-    "history": "History",
     "log_out": "Log out",
     "mailbox": "Mailbox",
-    "shopping_list": "Shopping list"
+    "shopping_list": "Shopping list",
+    "new_key": "Test new key"
   }
 }
