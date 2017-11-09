@@ -18,6 +18,10 @@ script:
   - npm run build
   - npm run test
   - xvfb-run wct
+services:
+  - docker
+before_deploy:
+  - docker pull lokalise/lokalise-cli
 deploy:
   provider: script
   script: script/travis_deploy
